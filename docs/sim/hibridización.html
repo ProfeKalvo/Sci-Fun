@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysSim - Hibridización de Orbitales</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #F0F9F4; 
+            margin: 0; 
+            color: #2D4A3E; 
+            font-family: 'Outfit', sans-serif; 
+            overflow: hidden; 
+        }
+        #plot { width: 100vw; height: 70vh; }
+        .panel-control { 
+            position: fixed; bottom: 0; width: 100%; 
+            background: white; padding: 25px; 
+            border-top: 4px solid #56ab91; 
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+            z-index: 20;
+        }
+        button { transition: all 0.3s; }
+        button:hover { transform: translateY(-2px); }
+        .btn-base { background-color: #f1f5f9; color: #475569; }
+        .btn-hybrid { background-color: #e2f3eb; color: #2d6a4f; border: 2px solid #56ab91; }
+    </style>
+</head>
+<body>
+
+    <header class="p-4 bg-white border-b border-green-100 flex justify-between items-center shadow-sm">
+        <button onclick="window.location.href='../lobby-simulaciones.html'" class="text-sm font-bold text-green-700 hover:text-green-900">
+            🡠 REGRESAR AL ÍNDICE
+        </button>
+        <div class="text-center">
+            <h1 class="text-lg font-bold text-gray-700 uppercase tracking-tighter text-sm">Unidad 2: Enlace Químico</h1>
+            <p id="label" class="text-green-600 font-bold text-xl uppercase tracking-widest">-</p>
+        </div>
+        <div class="w-24 text-right text-[10px] text-gray-400 font-bold uppercase">Ciencias Naturales SV</div>
+    </header>
+
+    <div id="plot"></div>
+
+    <div class="panel-control">
+        <div class="max-w-6xl mx-auto flex flex-col gap-6">
+            <div class="flex flex-wrap justify-center gap-4">
+                <span class="text-xs font-bold text-gray-500 uppercase self-center">Paso 1: Elige Orbital Atómico</span>
+                <button onclick="renderBaseOrbital('s')" class="btn-base px-6 py-2 rounded-xl font-bold">Orbital s</button>
+                <button onclick="renderBaseOrbital('p')" class="btn-base px-6 py-2 rounded-xl font-bold">Orbital p</button>
+                <button onclick="renderBaseOrbital('d')" class="btn-base px-6 py-2 rounded-xl font-bold">Orbital d</button>
+            </div>
+            <div class="flex flex-wrap justify-center gap-4 border-t border-gray-100 pt-6">
+                <span class="text-xs font-bold text-gray-500 uppercase self-center tracking-wider">Paso 2: ¡Combínalos! (Hibridización)</span>
+                <button onclick="renderHybridOrbital('sp')" class="btn-hybrid px-8 py-3 rounded-xl font-bold shadow-md">sp (Lineal)</button>
+                <button onclick="renderHybridOrbital('sp2')" class="btn-hybrid px-8 py-3 rounded-xl font-bold shadow-md">sp² (Trigonal Planar)</button>
+                <button onclick="renderHybridOrbital('sp3')" class="btn-hybrid px-8 py-3 rounded-xl font-bold shadow-md">sp³ (Tetraédrico)</button>
+                <button onclick="renderHybridOrbital('dsp2')" class="btn-hybrid px-8 py-3 rounded-xl font-bold shadow-md">dsp² (Cuadrado Planar)</button>
+                <button onclick="renderHybridOrbital('d2sp3')" class="btn-hybrid px-8 py-3 rounded-xl font-bold shadow-md">d²sp³ (Octaédrico)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="guia-container" class="fixed bottom-36 right-10 z-50 flex flex-col items-center">
+        <div id="burbuja-texto" class="absolute bottom-full mb-4 w-64 bg-white border-2 border-green-500 p-4 rounded-2xl shadow-xl text-sm text-gray-700">
+            <div class="relative">
+                <p id="mensaje-guia">¡Hola! Vamos a explorar la hibridización de orbitales atómicos. ¡Haz clic en mí para comenzar!</p>
+                <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-green-500"></div>
+            </div>
+        </div>
+        <div class="cursor-pointer transition-transform active:scale-95" onclick="interactuarGuia()">
+            <img src="../assets/tu-avatar.png" alt="Guía de Ciencias" class="w-32 h-32 md:w-48 md:h-48 object-contain filter drop-shadow-lg">
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DEL AVATAR GUÍA ---
+        let clickCount = 0;
+        const mensajesGuia = [
+            "¡Vamos a explorar la hibridización de orbitales atómicos. ¡Haz clic en mí para comenzar!",
+            "Los orbitales atómicos son regiones del espacio donde es más probable encontrar un electrón. Puedes ver los básicos (s, p, d) con los botones grises.",
+            "La hibridización ocurre cuando estos orbitales 'se mezclan' matemáticamente para formar nuevos orbitales híbridos. ¡Esto define la forma de las moléculas!",
+            "Esta 'mezcla' es clave para que los átomos formen enlaces químicos más estables y fuertes, permitiendo crear la geometría de moléculas complejas.",
+            "Por ejemplo, para que el Carbono forme 4 enlaces iguales, hibridiza sus orbitales s y p. ¡Usa los botones verdes para ver cómo cambia la forma!",
+            "¡Intenta combinar orbitales! ¿Qué forma tiene un orbital sp3 comparado con un orbital d2sp3? ¡Descúbrelo interactuando con la simulación!",
+            "Si tocas el boton de sp3 podras notar que el orbital sp3 tiene una forma diferente a como se nos muestra en los libros, esto es por que aqui se muestra la forma real de la función de onda, mientras que en los libros se muestra una forma esquematica para facilitar la comprensión. ¡Experimenta con las demas combinaciones!"
+        ];
+        function interactuarGuia() {
+            clickCount++;
+            let currentMessageIndex = clickCount;
+            if (currentMessageIndex >= mensajesGuia.length) {
+                currentMessageIndex = mensajesGuia.length - 1; // Detenerse en el último mensaje
+            }
+            document.getElementById('mensaje-guia').innerText = mensajesGuia[currentMessageIndex];
+        }
+
+        // --- LÓGICA DE VISUALIZACIÓN ---
+        function getCoordsBase(type, steps) {
+            let X = [], Y = [], Z = [], Color = [];
+            for (let i = 0; i <= steps; i++) {
+                let theta = (Math.PI * i) / steps;
+                let xr = [], yr = [], zr = [], cr = [];
+                for (let j = 0; j <= steps; j++) {
+                    let phi = (2 * Math.PI * j) / steps;
+                    let r = 0;
+                    const cosT = Math.cos(theta);
+                    const sinT = Math.sin(theta);
+                    
+                    if (type === 's') r = 1; // Esférico
+                    else if (type === 'p') r = Math.abs(cosT); // pz (preciso)
+                    else if (type === 'd') r = Math.abs(3*cosT**2 - 1); // dz2 (preciso)
+                    r *= 2; 
+
+                    xr.push(r * sinT * Math.cos(phi));
+                    yr.push(r * sinT * Math.sin(phi));
+                    zr.push(r * cosT);
+                    cr.push(r);
+                }
+                X.push(xr); Y.push(yr); Z.push(zr); Color.push(cr);
+            }
+            return {X, Y, Z, Color};
+        }
+
+        // --- LÓGICA DE HIBRIDIZACIÓN (APROXIMACIONES) ---
+        function getCoordsHybrid(type, steps) {
+            let X = [], Y = [], Z = [], Color = [];
+            for (let i = 0; i <= steps; i++) {
+                let theta = (Math.PI * i) / steps;
+                let xr = [], yr = [], zr = [], cr = [];
+                for (let j = 0; j <= steps; j++) {
+                    let phi = (2 * Math.PI * j) / steps;
+                    let r = 0;
+                    const cosT = Math.cos(theta);
+                    const sinT = Math.sin(theta);
+                    
+                    // Aproximaciones visuales basadas en combinaciones lineales sumadas/restadas
+                    if (type === 'sp') { // Dos lóbulos lineales, uno grande y uno chico, alineados en z
+                        r = Math.abs(cosT + 0.3 * sinT**2); // Lóbulos desiguales para sp
+                    } 
+                    else if (type === 'sp2') { // Tres lóbulos en plano trigonal, aproximación trigonal
+                        r = Math.abs(sinT * Math.cos(3*phi/2)) + 0.1;
+                    } 
+                    else if (type === 'sp3') { // Cuatro lóbulos tetraédricos, aproximación tetraédrica
+                        r = Math.abs(3 * cosT**2 - 1) * Math.abs(sinT**3) + 0.1; 
+                    }
+                    else if (type === 'dsp2') { // Cuatro lóbulos en plano cuadrado
+                        r = Math.abs(sinT**2 * Math.cos(2*phi)) + 0.1;
+                    }
+                    else if (type === 'd2sp3') { // Seis lóbulos octaédricos
+                        r = Math.abs(3 * cosT**3 - 3 * cosT) + 0.1;
+                    }
+                    r *= 2.5; 
+
+                    xr.push(r * sinT * Math.cos(phi));
+                    yr.push(r * sinT * Math.sin(phi));
+                    zr.push(r * cosT);
+                    cr.push(r);
+                }
+                X.push(xr); Y.push(yr); Z.push(zr); Color.push(cr);
+            }
+            return {X, Y, Z, Color};
+        }
+
+        const layout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            scene: {
+                xaxis: { visible: false, range: [-4, 4] },
+                yaxis: { visible: false, range: [-4, 4] },
+                zaxis: { visible: false, range: [-4, 4] },
+                aspectmode: 'cube'
+            },
+            margin: { l: 0, r: 0, t: 0, b: 0 }
+        };
+
+        const config = { displayModeBar: false };
+
+        function renderBaseOrbital(type) {
+            const labelMap = {'s': 'Orbital atómico s', 'p': 'Orbital atómico pz', 'd': 'Orbital atómico dz²'};
+            document.getElementById('label').innerText = labelMap[type];
+            const {X, Y, Z, Color} = getCoordsBase(type, 40);
+            const data = [{
+                type: 'surface', x: X, y: Y, z: Z,
+                surfacecolor: Color, colorscale: 'Viridis', showscale: false,
+                lighting: { ambient: 0.8, diffuse: 0.9, roughness: 0.3 }
+            }];
+            Plotly.react('plot', data, layout, config);
+        }
+
+        function renderHybridOrbital(type) {
+            const labelMap = {'sp': 'Orbital Híbrido sp (Lineal)', 'sp2': 'Orbital Híbrido sp² (Trigonal Planar)', 'sp3': 'Orbital Híbrido sp³ (Tetraédrico)', 'dsp2': 'Orbital Híbrido dsp² (Cuadrado Planar)', 'd2sp3': 'Orbital Híbrido d²sp³ (Octaédrico)'};
+            document.getElementById('label').innerText = labelMap[type];
+            const {X, Y, Z, Color} = getCoordsHybrid(type, 40);
+            const data = [{
+                type: 'surface', x: X, y: Y, z: Z,
+                surfacecolor: Color, colorscale: 'Viridis', showscale: false,
+                lighting: { ambient: 0.8, diffuse: 0.9, roughness: 0.3 }
+            }];
+            Plotly.react('plot', data, layout, config);
+        }
+
+        // Iniciar con orbital s y avatar visible
+        window.onload = function() {
+            renderBaseOrbital('s');
+            // La burbuja de texto ya está configurada para ser visible en el HTML
+        };
+    </script>
+</body>
+</html>

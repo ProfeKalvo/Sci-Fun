@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FunSci – Difusión y Ósmosis</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #56ab91;
+    --verde-oscuro: #2D4A3E;
+    --verde-claro: #F0F9F4;
+    --agua: #60a5fa;
+    --soluto: #f97316;
+    --soluto2: #a855f7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background-color: var(--verde-claro);
+    background-image: radial-gradient(#d1eadd 1px, transparent 1px);
+    background-size: 20px 20px;
+    font-family: 'Outfit', sans-serif;
+    color: var(--verde-oscuro);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  header {
+    background: white;
+    border-bottom: 4px solid var(--verde);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    flex-shrink: 0;
+  }
+  #canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px 4px;
+    min-height: 0;
+  }
+  canvas {
+    border-radius: 16px;
+    border: 2px solid #cde5d8;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(86,171,145,0.12);
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  .panel-control {
+    background: white;
+    border-top: 4px solid var(--verde);
+    padding: 12px 20px;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.04);
+    flex-shrink: 0;
+  }
+  input[type=range] { accent-color: var(--verde); width: 100%; cursor: pointer; }
+  .btn-modo {
+    border: 2px solid var(--verde);
+    border-radius: 10px;
+    padding: 6px 16px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    background: white;
+    color: var(--verde-oscuro);
+    transition: all 0.2s;
+  }
+  .btn-modo.activo {
+    background: var(--verde);
+    color: white;
+  }
+  .btn-accion {
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .btn-accion:hover { background: #3d8c75; }
+  .leyenda-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  #guia-container {
+    position: fixed;
+    bottom: 120px;
+    right: 16px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  #burbuja-texto {
+    background: white;
+    border: 2px solid var(--verde);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 8px;
+    max-width: 220px;
+    font-size: 12px;
+    color: #374151;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  #avatar-img {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.2s;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+  #avatar-img:hover { transform: scale(1.1); }
+  .concentracion-bar {
+    height: 8px;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button onclick="window.location.href='../lobby-simulaciones.html'"
+    class="text-sm font-bold text-green-700 hover:text-green-900 flex items-center gap-1">
+    🡠 REGRESAR
+  </button>
+  <div class="text-center">
+    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Transporte celular</p>
+    <p class="font-bold text-lg" style="color:var(--verde-oscuro)">Difusión &amp; Ósmosis</p>
+  </div>
+  <div class="flex gap-2">
+    <button class="btn-modo activo" id="btn-difusion" onclick="setModo('difusion')">Difusión</button>
+    <button class="btn-modo" id="btn-osmosis" onclick="setModo('osmosis')">Ósmosis</button>
+  </div>
+</header>
+
+<div id="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
+
+<div class="panel-control">
+  <div class="max-w-5xl mx-auto">
+
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-1 mb-3 text-xs font-semibold">
+      <div class="flex items-center gap-2">
+        <span class="leyenda-dot" style="background:var(--agua)"></span>
+        <span>Agua (H₂O)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="leyenda-dot" style="background:var(--soluto)"></span>
+        <span id="label-soluto">Soluto</span>
+      </div>
+      <div class="flex items-center gap-2 ml-auto gap-x-3">
+        <span class="text-gray-500 text-[10px] uppercase tracking-wider">Concentración izq:</span>
+        <div class="w-24 bg-gray-100 rounded-full overflow-hidden" style="height:8px">
+          <div id="bar-izq" class="concentracion-bar" style="background:var(--soluto);width:50%"></div>
+        </div>
+        <span class="text-gray-500 text-[10px] uppercase tracking-wider">der:</span>
+        <div class="w-24 bg-gray-100 rounded-full overflow-hidden" style="height:8px">
+          <div id="bar-der" class="concentracion-bar" style="background:var(--soluto);width:50%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] font-black text-gray-600 uppercase tracking-wider">
+          Soluto lado izquierdo
+        </label>
+        <input type="range" id="conc-izq" min="0" max="60" value="40">
+        <span id="conc-izq-val" class="text-xs font-bold text-center" style="color:var(--verde)">40 partículas</span>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] font-black text-gray-600 uppercase tracking-wider">
+          Soluto lado derecho
+        </label>
+        <input type="range" id="conc-der" min="0" max="60" value="10">
+        <span id="conc-der-val" class="text-xs font-bold text-center" style="color:var(--verde)">10 partículas</span>
+      </div>
+      <div class="flex items-center gap-3 justify-center sm:justify-end">
+        <button class="btn-accion" onclick="reiniciar()">⟳ Reiniciar</button>
+        <button class="btn-accion" id="btn-pause" onclick="togglePause()" style="background:#888">⏸ Pausa</button>
+      </div>
+    </div>
+
+    <div id="info-modo" class="mt-2 text-[11px] text-gray-500 font-medium text-center"></div>
+  </div>
+</div>
+
+<!-- Avatar guía -->
+<div id="guia-container">
+  <div id="burbuja-texto" class="hidden">
+    <p id="mensaje-guia"></p>
+  </div>
+  <img id="avatar-img" src="../assets/tu-avatar.png" alt="Guía"
+    onerror="this.style.display='none'" onclick="toggleGuia()">
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let modo = 'difusion';
+let pausado = false;
+let particles = [];
+let animId;
+
+const AGUA_R = 3.5;
+const SOLUTO_R = 6;
+const AGUA_COLOR = '#60a5fa';
+const SOLUTO_COLOR = '#f97316';
+const SOLUTO2_COLOR = '#a855f7';
+const MEMBRANA_GROSOR = 6;
+const PORO_ALTO = 14;
+const FRICTION = 0.98;
+const SPEED_BASE = 2.2;
+
+let W, H, MX;
+
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  const maxW = wrap.clientWidth - 24;
+  const maxH = wrap.clientHeight - 8;
+  const ratio = 16 / 9;
+  let w = maxW, h = maxW / ratio;
+  if (h > maxH) { h = maxH; w = h * ratio; }
+  canvas.width = Math.floor(w);
+  canvas.height = Math.floor(h);
+  W = canvas.width; H = canvas.height; MX = W / 2;
+}
+
+function rnd(a, b) { return a + Math.random() * (b - a); }
+function rndSpeed() { return (Math.random() - 0.5) * 2 * SPEED_BASE; }
+
+class Particle {
+  constructor(tipo, x, y) {
+    this.tipo = tipo; // 'agua' | 'soluto'
+    this.x = x; this.y = y;
+    this.vx = rndSpeed(); this.vy = rndSpeed();
+    this.r = tipo === 'agua' ? AGUA_R : SOLUTO_R;
+    this.color = tipo === 'agua' ? AGUA_COLOR : (Math.random() > 0.5 ? SOLUTO_COLOR : SOLUTO2_COLOR);
+    this.lado = x < MX ? 'izq' : 'der'; // lado inicial
+    this.alpha = 1;
+  }
+
+  get puedeAtravesar() {
+    if (modo === 'difusion') return true;
+    if (modo === 'osmosis') return this.tipo === 'agua';
+    return false;
+  }
+
+  update(porasy) {
+    this.vx *= FRICTION; this.vy *= FRICTION;
+    // Mantener velocidad mínima
+    const spd = Math.hypot(this.vx, this.vy);
+    if (spd < SPEED_BASE * 0.5) {
+      const a = Math.random() * Math.PI * 2;
+      this.vx += Math.cos(a) * SPEED_BASE * 0.4;
+      this.vy += Math.sin(a) * SPEED_BASE * 0.4;
+    }
+
+    const nx = this.x + this.vx;
+    const ny = this.y + this.vy;
+
+    // Rebote paredes laterales
+    if (nx - this.r < 0) { this.x = this.r; this.vx = Math.abs(this.vx); return; }
+    if (nx + this.r > W) { this.x = W - this.r; this.vx = -Math.abs(this.vx); return; }
+    // Rebote paredes top/bottom
+    if (ny - this.r < 0) { this.y = this.r; this.vy = Math.abs(this.vy); return; }
+    if (ny + this.r > H) { this.y = H - this.r; this.vy = -Math.abs(this.vy); return; }
+
+    // Colisión con membrana
+    const ml = MX - MEMBRANA_GROSOR / 2;
+    const mr = MX + MEMBRANA_GROSOR / 2;
+    const cruzandoIzqDer = this.x < ml && nx + this.r > ml;
+    const cruzandoDerIzq = this.x > mr && nx - this.r < mr;
+
+    if (cruzandoIzqDer || cruzandoDerIzq) {
+      // Verificar si hay un poro cerca
+      let enPoro = false;
+      for (const p of porasy) {
+        if (ny > p - PORO_ALTO && ny < p + PORO_ALTO) { enPoro = true; break; }
+      }
+      if (enPoro && this.puedeAtravesar) {
+        // En ósmosis, ponderar dirección del agua según gradiente osmótico
+        if (modo === 'osmosis' && this.tipo === 'agua') {
+          const concIzq = particles.filter(p => p.tipo === 'soluto' && p.x < MX).length;
+          const concDer = particles.filter(p => p.tipo === 'soluto' && p.x > MX).length;
+          // El agua va hacia donde hay más soluto (más concentrado)
+          const yendoADer = this.vx > 0;
+          const masConcentradoDer = concDer > concIzq;
+          // Probabilidad de pasar: mayor si va hacia lado más concentrado
+          let probPasar = 0.6;
+          if ((yendoADer && masConcentradoDer) || (!yendoADer && !masConcentradoDer)) {
+            probPasar = 0.85;
+          } else {
+            probPasar = 0.15;
+          }
+          if (Math.random() > probPasar) {
+            // Rebotar
+            this.vx = -this.vx;
+            if (cruzandoIzqDer) this.x = ml - this.r - 0.5;
+            else this.x = mr + this.r + 0.5;
+            return;
+          }
+        }
+        // Pasar
+        this.x = nx; this.y = ny;
+        this.lado = this.x < MX ? 'izq' : 'der';
+      } else {
+        // Rebotar
+        this.vx = -this.vx;
+        if (cruzandoIzqDer) this.x = ml - this.r - 0.5;
+        else this.x = mr + this.r + 0.5;
+      }
+      return;
+    }
+
+    this.x = nx; this.y = ny;
+    this.lado = this.x < MX ? 'izq' : 'der';
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = 0.88;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    if (this.tipo === 'soluto') {
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+function generarPoros(n) {
+  const poros = [];
+  const sep = H / (n + 1);
+  for (let i = 1; i <= n; i++) poros.push(sep * i);
+  return poros;
+}
+
+let poros = [];
+
+function crearParticulas() {
+  const nIzq = parseInt(document.getElementById('conc-izq').value);
+  const nDer = parseInt(document.getElementById('conc-der').value);
+  const nAgua = 55;
+
+  particles = [];
+
+  // Solutos lado izquierdo
+  for (let i = 0; i < nIzq; i++) {
+    particles.push(new Particle('soluto',
+      rnd(SOLUTO_R + 2, MX - MEMBRANA_GROSOR - SOLUTO_R - 2),
+      rnd(SOLUTO_R + 2, H - SOLUTO_R - 2)
+    ));
+  }
+  // Solutos lado derecho
+  for (let i = 0; i < nDer; i++) {
+    particles.push(new Particle('soluto',
+      rnd(MX + MEMBRANA_GROSOR + SOLUTO_R + 2, W - SOLUTO_R - 2),
+      rnd(SOLUTO_R + 2, H - SOLUTO_R - 2)
+    ));
+  }
+  // Agua lado izquierdo
+  for (let i = 0; i < nAgua; i++) {
+    particles.push(new Particle('agua',
+      rnd(AGUA_R + 2, MX - MEMBRANA_GROSOR - AGUA_R - 2),
+      rnd(AGUA_R + 2, H - AGUA_R - 2)
+    ));
+  }
+  // Agua lado derecho
+  for (let i = 0; i < nAgua; i++) {
+    particles.push(new Particle('agua',
+      rnd(MX + MEMBRANA_GROSOR + AGUA_R + 2, W - AGUA_R - 2),
+      rnd(AGUA_R + 2, H - AGUA_R - 2)
+    ));
+  }
+}
+
+function dibujarMembrana() {
+  const nPoros = modo === 'difusion' ? 8 : 5;
+  if (poros.length !== nPoros) poros = generarPoros(nPoros);
+
+  // Fondo membrana
+  ctx.fillStyle = '#b0d9cc';
+  ctx.fillRect(MX - MEMBRANA_GROSOR / 2, 0, MEMBRANA_GROSOR, H);
+
+  // Etiqueta membrana
+  ctx.save();
+  ctx.translate(MX, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.font = `bold ${Math.max(9, H * 0.025)}px Outfit`;
+  ctx.fillStyle = '#2D4A3E';
+  ctx.textAlign = 'center';
+  ctx.fillText(modo === 'difusion' ? 'Membrana permeable' : 'Membrana semipermeable', 0, -MEMBRANA_GROSOR - 3);
+  ctx.restore();
+
+  // Poros (huecos en membrana)
+  ctx.clearRect(MX - MEMBRANA_GROSOR / 2, 0, MEMBRANA_GROSOR, H);
+  for (let i = 0; i < H; i += 1) {
+    let enPoro = false;
+    for (const p of poros) {
+      if (i > p - PORO_ALTO && i < p + PORO_ALTO) { enPoro = true; break; }
+    }
+    if (!enPoro) {
+      ctx.fillStyle = '#b0d9cc';
+      ctx.fillRect(MX - MEMBRANA_GROSOR / 2, i, MEMBRANA_GROSOR, 1);
+    }
+  }
+
+  // Indicador de poro solo en ósmosis
+  if (modo === 'osmosis') {
+    ctx.font = `${Math.max(8, H * 0.02)}px Outfit`;
+    ctx.fillStyle = '#56ab91';
+    ctx.textAlign = 'center';
+    for (const p of poros) {
+      ctx.fillText('~', MX, p + 4);
+    }
+  }
+}
+
+function dibujarEtiquetas() {
+  const fs = Math.max(11, H * 0.035);
+  ctx.font = `600 ${fs}px Outfit`;
+  ctx.textAlign = 'center';
+
+  const solIzq = particles.filter(p => p.tipo === 'soluto' && p.x < MX).length;
+  const solDer = particles.filter(p => p.tipo === 'soluto' && p.x > MX).length;
+  const aguaIzq = particles.filter(p => p.tipo === 'agua' && p.x < MX).length;
+  const aguaDer = particles.filter(p => p.tipo === 'agua' && p.x > MX).length;
+
+  // Fondos de etiquetas
+  const pad = 10, lh = fs * 1.4;
+  const box = (x, y, text, col) => {
+    ctx.fillStyle = col + '22';
+    const tw = ctx.measureText(text).width;
+    ctx.beginPath();
+    ctx.roundRect(x - tw/2 - pad, y - lh * 0.75, tw + pad*2, lh, 6);
+    ctx.fill();
+    ctx.fillStyle = col;
+    ctx.fillText(text, x, y);
+  };
+
+  const yTop = fs + 8;
+  box(MX / 2, yTop, `Soluto: ${solIzq}`, '#f97316');
+  box(MX + MX / 2, yTop, `Soluto: ${solDer}`, '#f97316');
+
+  const yBot = H - 10;
+  ctx.font = `400 ${Math.max(9, H * 0.026)}px Outfit`;
+  box(MX / 2, yBot, `Agua: ${aguaIzq}`, '#60a5fa');
+  box(MX + MX / 2, yBot, `Agua: ${aguaDer}`, '#60a5fa');
+
+  // Actualizar barras externas
+  const maxSol = 60;
+  document.getElementById('bar-izq').style.width = Math.round(solIzq / maxSol * 100) + '%';
+  document.getElementById('bar-der').style.width = Math.round(solDer / maxSol * 100) + '%';
+
+  // Flecha de movimiento neto
+  if (modo === 'osmosis') {
+    const aguaFlujoDer = aguaDer - aguaIzq;
+    if (Math.abs(aguaFlujoDer) > 3) {
+      const dir = aguaFlujoDer < 0 ? 1 : -1; // Si hay más agua a la derecha, flujo va a izq
+      dibujarFlecha(dir);
+    }
+  }
+}
+
+function dibujarFlecha(dir) {
+  const cx = MX;
+  const cy = H * 0.5;
+  const largo = 40;
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.strokeStyle = AGUA_COLOR;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(cx - dir * (largo + MEMBRANA_GROSOR), cy);
+  ctx.lineTo(cx + dir * largo, cy);
+  ctx.stroke();
+  // Punta
+  ctx.beginPath();
+  ctx.moveTo(cx + dir * largo, cy);
+  ctx.lineTo(cx + dir * largo - dir * 10, cy - 8);
+  ctx.moveTo(cx + dir * largo, cy);
+  ctx.lineTo(cx + dir * largo - dir * 10, cy + 8);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function loop() {
+  if (!pausado) {
+    ctx.clearRect(0, 0, W, H);
+    dibujarMembrana();
+    for (const p of particles) { p.update(poros); p.draw(); }
+    dibujarEtiquetas();
+  }
+  animId = requestAnimationFrame(loop);
+}
+
+function reiniciar() {
+  resize();
+  poros = generarPoros(modo === 'difusion' ? 8 : 5);
+  crearParticulas();
+  actualizarInfo();
+}
+
+function setModo(m) {
+  modo = m;
+  document.getElementById('btn-difusion').classList.toggle('activo', m === 'difusion');
+  document.getElementById('btn-osmosis').classList.toggle('activo', m === 'osmosis');
+  document.getElementById('label-soluto').textContent = m === 'osmosis' ? 'Soluto (no pasa)' : 'Soluto';
+  reiniciar();
+  const msg = m === 'difusion'
+    ? '¡Observa cómo las partículas se mueven de donde hay más a donde hay menos concentración hasta equilibrarse!'
+    : '¡Solo el agua puede pasar por la membrana semipermeable! El agua se mueve hacia donde hay más soluto (presión osmótica).';
+  hablarGuia(msg);
+}
+
+function togglePause() {
+  pausado = !pausado;
+  document.getElementById('btn-pause').textContent = pausado ? '▶ Continuar' : '⏸ Pausa';
+  document.getElementById('btn-pause').style.background = pausado ? '#56ab91' : '#888';
+}
+
+function actualizarInfo() {
+  const infos = {
+    difusion: 'La difusión ocurre cuando las partículas se mueven espontáneamente desde una zona de alta concentración a una de baja concentración.',
+    osmosis: 'La ósmosis es la difusión del agua a través de una membrana semipermeable hacia el lado con mayor concentración de soluto.',
+  };
+  document.getElementById('info-modo').textContent = infos[modo];
+}
+
+// Controles
+document.getElementById('conc-izq').oninput = function() {
+  document.getElementById('conc-izq-val').textContent = this.value + ' partículas';
+};
+document.getElementById('conc-der').oninput = function() {
+  document.getElementById('conc-der-val').textContent = this.value + ' partículas';
+};
+document.getElementById('conc-izq').onchange = reiniciar;
+document.getElementById('conc-der').onchange = reiniciar;
+
+// Guía
+function toggleGuia() {
+  document.getElementById('burbuja-texto').classList.toggle('hidden');
+}
+function hablarGuia(texto) {
+  document.getElementById('mensaje-guia').textContent = texto;
+  document.getElementById('burbuja-texto').classList.remove('hidden');
+}
+
+window.addEventListener('resize', () => { resize(); crearParticulas(); });
+
+// Init
+resize();
+poros = generarPoros(8);
+crearParticulas();
+actualizarInfo();
+loop();
+
+setTimeout(() => {
+  hablarGuia('¡Cambia la concentración de cada lado y observa cómo las partículas se mueven! Prueba también el modo Ósmosis.');
+}, 1000);
+</script>
+</body>
+</html>
