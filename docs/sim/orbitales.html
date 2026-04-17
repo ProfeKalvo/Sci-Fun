@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>PhysSim - Orbitales 3D (Modo Libro)</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #F0F9F4; /* El mismo verde del lobby */
+            margin: 0; 
+            color: #2D4A3E; 
+            font-family: 'Outfit', sans-serif; 
+            overflow: hidden; 
+        }
+        #plot { width: 100vw; height: 70vh; }
+        .panel-educativo { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: white; 
+            padding: 20px; 
+            border-top: 4px solid #56ab91; 
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+        }
+        input[type=range] { accent-color: #56ab91; }
+    </style>
+</head>
+<body>
+
+    <header class="p-4 bg-white border-b border-green-100 flex justify-between items-center shadow-sm">
+        <button onclick="window.location.href='../lobby-simulaciones.html'" class="text-sm font-bold text-green-700 hover:text-green-900">
+            🡠 VOLVER
+        </button>
+        <div class="text-center">
+            <h1 class="text-lg font-bold text-gray-700 uppercase tracking-tighter">ORBITALES ATÓMICOS</h1>
+            <p id="label" class="text-green-600 font-bold text-xl">-</p>
+        </div>
+        <div class="w-24 text-right text-[10px] text-gray-400 font-bold">KALVO SIMULACIONES</div>
+    </header>
+
+    <div id="plot"></div>
+
+    <div class="panel-educativo">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Nivel de Energía (n)</label>
+                <input type="range" id="n" min="1" max="4" value="2">
+                <div class="flex justify-between text-[10px] font-bold text-green-800"><span>1</span><span>4</span></div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Forma del Orbital (l)</label>
+                <input type="range" id="input_l" min="0" max="1" value="1">
+                <div class="flex justify-between text-[10px] font-bold text-green-800"><span>s</span><span>f</span></div>
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-[10px] font-black text-gray-400 uppercase">Orientación (m)</label>
+                <input type="range" id="input_m" min="-1" max="1" value="0">
+                <div class="flex justify-between text-[10px] font-bold text-green-800"><span>-l</span><span>+l</span></div>
+            </div>
+        
+    </div>
+
+    <script>
+        function render() {
+            const nVal = parseInt(document.getElementById('n').value);
+            const l_el = document.getElementById('input_l');
+            const m_el = document.getElementById('input_m');
+            
+            l_el.max = nVal - 1;
+            const lVal = parseInt(l_el.value);
+            m_el.min = -lVal;
+            m_el.max = lVal;
+            const mVal = parseInt(m_el.value);
+
+            const names = ['s', 'p', 'd', 'f'];
+            document.getElementById('label').innerText = `Orbital Atómico ${nVal}${names[lVal]} (m = ${mVal})`;
+
+            const steps = 45;
+            let X = [], Y = [], Z = [], Color = [];
+
+            for (let i = 0; i <= steps; i++) {
+                let theta = (Math.PI * i) / steps;
+                let xr = [], yr = [], zr = [], cr = [];
+                for (let j = 0; j <= steps; j++) {
+                    let phi = (2 * Math.PI * j) / steps;
+                    let r = 0;
+                    const cosT = Math.cos(theta);
+                    const sinT = Math.sin(theta);
+                    
+                    if (lVal === 0) r = 1;
+                    else if (lVal === 1) r = (mVal === 0) ? Math.abs(cosT) : Math.abs(sinT);
+                    else if (lVal === 2) {
+                        if (mVal === 0) r = Math.abs(3*cosT**2 - 1);
+                        else if (Math.abs(mVal) === 1) r = Math.abs(sinT*cosT);
+                        else r = sinT**2;
+                    }
+                    r *= (nVal * 0.7);
+
+                    xr.push(r * sinT * Math.cos(phi));
+                    yr.push(r * sinT * Math.sin(phi));
+                    zr.push(r * cosT);
+                    cr.push(r);
+                }
+                X.push(xr); Y.push(yr); Z.push(zr); Color.push(cr);
+            }
+
+            const data = [{
+                type: 'scatter3d',
+                x: X, y: Y, z: Z,
+                surfacecolor: Color,
+                colorscale: 'inferno', // Colores azul/naranja que resaltan en fondo claro
+                showscale: false,
+                lighting: { ambient: 0.8, diffuse: 0.9, roughness: 0.2 }
+            }];
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)', // Transparente para ver el fondo verde
+                scene: {
+                    xaxis: { visible: false, range: [-3.5, 3.5] },
+                    yaxis: { visible: false, range: [-3.5, 3.5] },
+                    zaxis: { visible: false, range: [-3.5, 3.5] },
+                    aspectmode: 'cube'
+                },
+                margin: { l: 0, r: 0, t: 0, b: 0 }
+            };
+
+            Plotly.react('plot', data, layout, { displayModeBar: false });
+        }
+
+        document.querySelectorAll('input').forEach(el => el.oninput = render);
+        window.onload = render;
+    </script>
+      <div id="guia-container" class="fixed bottom-36 right-10 z-50 flex flex-col items-center">
+        <div id="burbuja-texto" class="absolute bottom-full mb-4 w-64 bg-white border-2 border-green-500 p-4 rounded-2xl shadow-xl text-sm text-gray-700">
+            <div class="relative">
+                <p id="mensaje-guia">¡Hola! Vamos a explorar la forma de los orbitales atómicos. ¡Haz clic en mí para comenzar!</p>
+                <div class="absolute -bottom-6 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-green-500"></div>
+            </div>
+        </div>
+        <div class="cursor-pointer transition-transform active:scale-95" onclick="interactuarGuia()">
+            <img src="assets_2/tu-avatar_2.png" alt="Guía de Ciencias" class="w-32 h-32 md:w-48 md:h-48 object-contain filter drop-shadow-lg">
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DEL AVATAR GUÍA ---
+        let clickCount = 0;
+        const mensajesGuia = [
+            "¡Hola! Vamos a explorar la forma de los orbitales atómicos. ¡Haz clic en mí para comenzar!",
+            "Los orbitales atómicos son regiones del espacio donde es más probable encontrar un electrón. Cada orbital tiene una forma característica (s, p, d, f) y se define por números cuánticos n, l y m.",
+            "El número cuántico principal (n) determina el tamaño y energía del orbital, mientras que el número cuántico azimutal (l) define la forma del orbital. El número cuántico magnético (m) indica la orientación espacial del orbital.",
+            "Los orbitales s son esféricos, los p tienen forma de manzana, los d son más complejos y los f aún más. ¡Usa los controles para ver cómo cambian las formas con diferentes n, l y m!",
+            "¡Excelente! Ahora estás listo para explorar por tu cuenta. ¡Experimenta con las demas combinaciones!"
+        ];
+
+        function interactuarGuia() {
+            clickCount++;
+            let currentMessageIndex = clickCount;
+            if (currentMessageIndex >= mensajesGuia.length) {
+                currentMessageIndex = mensajesGuia.length - 1; // Detenerse en el último mensaje
+            }
+            document.getElementById('mensaje-guia').innerText = mensajesGuia[currentMessageIndex];
+        }
+
+</script>
+
+</body>
+</html>
