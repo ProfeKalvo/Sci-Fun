@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sci-fun - Mi Expediente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #F0F9F4; font-family: 'Outfit', sans-serif; color: #2D4A3E; }
+        .badge-card { transition: all 0.3s ease; }
+        .locked { filter: grayscale(1) opacity(0.4); }
+        .unlocked { filter: grayscale(0) opacity(1); transform: scale(1.05); border-color: #56ab91 !important; }
+        .rank-gradient { background: linear-gradient(135deg, #56ab91 0%, #3b82f6 100%); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-green-100 p-4 flex justify-between items-center shadow-sm">
+        <button onclick="window.location.href='../index.html'" class="text-xs font-bold text-green-700 hover:underline">🡠 VOLVER AL LOBBY</button>
+        <h1 class="text-lg font-black text-green-700 uppercase tracking-tighter italic">Sci-fun</h1>
+        <div class="w-10"></div> </header>
+
+    <main class="flex-grow p-6 max-w-4xl mx-auto w-full">
+        
+        <div class="rank-gradient rounded-3xl p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="bg-white/20 backdrop-blur-md p-4 rounded-full border-4 border-white/30">
+                    <img src="AVATAR/CAPIBARA.png" alt="Capi" class="w-24 h-24 object-contain">
+                </div>
+                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-green-900 text-[10px] font-black px-3 py-1 rounded-full shadow-lg uppercase">
+                    Nivel <span id="txt-nivel">1</span>
+                </div>
+            </div>
+
+            <div class="text-center md:text-left z-10">
+                <p class="text-xs font-bold text-green-100 uppercase tracking-widest mb-1">Expediente Científico</p>
+                <h2 id="txt-rango" class="text-3xl font-black uppercase mb-2">Cargando Rango...</h2>
+                <div class="flex items-center gap-4">
+                    <div class="bg-black/20 h-3 w-48 rounded-full overflow-hidden border border-white/10">
+                        <div id="bar-progreso" class="bg-yellow-400 h-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <span class="font-bold text-sm"><span id="txt-puntos">0</span> PX</span>
+                </div>
+            </div>
+            
+            <div class="absolute -right-10 -bottom-10 text-9xl opacity-10 rotate-12">🔬</div>
+        </div>
+
+        <h3 class="font-black text-gray-400 text-xs uppercase tracking-widest mb-6 px-2">Insignias Desbloqueadas</h3>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            
+            <div id="badge-welcome" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
+                <div class="text-4xl mb-3">👋</div>
+                <h4 class="font-bold text-sm text-gray-700">Primeros Pasos</h4>
+                <p class="text-[10px] text-gray-400 mt-1">Completaste el tutorial con Capi.</p>
+            </div>
+
+            <div id="badge-first-exam" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
+                <div class="text-4xl mb-3">🧪</div>
+                <h4 class="font-bold text-sm text-gray-700">Cerebro de Hierro</h4>
+                <p class="text-[10px] text-gray-400 mt-1">Aprobaste tu primer desafío académico.</p>
+            </div>
+
+            <div id="badge-pro" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
+                <div class="text-4xl mb-3">⚡</div>
+                <h4 class="font-bold text-sm text-gray-700">Investigador Pro</h4>
+                <p class="text-[10px] text-gray-400 mt-1">Alcanzaste los 100 puntos de experiencia.</p>
+            </div>
+
+            <div id="badge-master" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
+                <div class="text-4xl mb-3">👑</div>
+                <h4 class="font-bold text-sm text-gray-700">Maestro Sci-fun</h4>
+                <p class="text-[10px] text-gray-400 mt-1">Dominio total del laboratorio (200 PX).</p>
+            </div>
+
+        </div>
+
+        <div class="mt-12 text-center">
+            <button onclick="reiniciarProgreso()" class="text-[9px] font-bold text-gray-300 hover:text-red-400 uppercase tracking-widest transition-colors">Reiniciar mi expediente científico</button>
+        </div>
+
+    </main>
+
+    <script>
+        function cargarProgreso() {
+            // 1. Obtener datos de LocalStorage
+            const puntos = parseInt(localStorage.getItem('sci_fun_score') || '0');
+            const tutorialCompletado = localStorage.getItem('tutorialDone') === 'true';
+            
+            // 2. Actualizar Textos Básicos
+            document.getElementById('txt-puntos').innerText = puntos;
+            
+            // 3. Lógica de Rangos y Niveles
+            let rango = "Novato Científico";
+            let nivel = 1;
+            let progresoBarra = (puntos / 250) * 100; // El máximo es 250px para esta barra
+
+            if (puntos >= 200) {
+                rango = "Maestro de Laboratorio";
+                nivel = 4;
+            } else if (puntos >= 100) {
+                rango = "Investigador Senior";
+                nivel = 3;
+            } else if (puntos >= 50) {
+                rango = "Asistente de Capi";
+                nivel = 2;
+            }
+
+            document.getElementById('txt-rango').innerText = rango;
+            document.getElementById('txt-nivel').innerText = nivel;
+            document.getElementById('bar-progreso').style.width = Math.min(progresoBarra, 100) + "%";
+
+            // 4. Lógica de Medallas (Desbloqueo visual)
+            if (tutorialCompletado) {
+                document.getElementById('badge-welcome').classList.replace('locked', 'unlocked');
+            }
+            
+            if (puntos >= 10) {
+                document.getElementById('badge-first-exam').classList.replace('locked', 'unlocked');
+            }
+
+            if (puntos >= 100) {
+                document.getElementById('badge-pro').classList.replace('locked', 'unlocked');
+            }
+
+            if (puntos >= 200) {
+                document.getElementById('badge-master').classList.replace('locked', 'unlocked');
+            }
+        }
+
+        function reiniciarProgreso() {
+            if(confirm("¿Estás seguro de borrar todos tus logros? Capi se pondrá triste...")) {
+                localStorage.setItem('sci_fun_score', '0');
+                localStorage.setItem('tutorialDone', 'false');
+                location.reload();
+            }
+        }
+
+        // Ejecutar al cargar la página
+        window.onload = cargarProgreso;
+    </script>
+</body>
+</html>
