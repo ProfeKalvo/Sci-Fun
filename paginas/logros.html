@@ -17,7 +17,7 @@
 <body class="min-h-screen flex flex-col">
 
     <header class="bg-white border-b border-green-100 p-4 flex justify-between items-center shadow-sm">
-        <button onclick="window.location.href='../index.html'" class="text-xs font-bold text-green-700 hover:underline">🡠 VOLVER AL LOBBY</button>
+        <button onclick="window.location.href='../index.html'" class="text-xs font-bold text-green-700 hover:underline">🡠 VOLVER</button>
         <h1 class="text-lg font-black text-green-700 uppercase tracking-tighter italic">Sci-fun</h1>
         <div class="w-10"></div> </header>
 
@@ -70,9 +70,14 @@
             </div>
 
             <div id="badge-master" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
-                <div class="text-4xl mb-3">👑</div>
-                <h4 class="font-bold text-sm text-gray-700">Maestro Sci-fun</h4>
+                <div class="text-4xl mb-3">🎩</div>
+                <h4 class="font-bold text-sm text-gray-700">Sucesor de Walter White</h4>
                 <p class="text-[10px] text-gray-400 mt-1">Dominio total del laboratorio (200 PX).</p>
+            </div>
+            <div id="giga-pro" class="badge-card locked bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-sm">
+                <div class="text-4xl mb-3">🗿</div>
+                <h4 class="font-bold text-sm text-gray-700">Giga chad de la ciencia</h4>
+                <p class="text-[10px] text-gray-400 mt-1">Dominio de la ciencia(300 PX).</p>
             </div>
 
         </div>
@@ -97,13 +102,16 @@
             let nivel = 1;
             let progresoBarra = (puntos / 250) * 100; // El máximo es 250px para esta barra
 
-            if (puntos >= 200) {
-                rango = "Maestro de Laboratorio";
-                nivel = 4;
-            } else if (puntos >= 100) {
+            if (puntos >= 300) {
+                rango = "Giga chad de la ciencia";
+                nivel = 1;
+            } else if (puntos >= 200) {
                 rango = "Investigador Senior";
-                nivel = 3;
+                nivel = 4;
             } else if (puntos >= 50) {
+                rango = "Investigador junior";
+                nivel = 3;
+            } else if (puntos >= 25) {
                 rango = "Asistente de Capi";
                 nivel = 2;
             }
@@ -125,8 +133,11 @@
                 document.getElementById('badge-pro').classList.replace('locked', 'unlocked');
             }
 
-            if (puntos >= 200) {
+            if (puntos >=0) {
                 document.getElementById('badge-master').classList.replace('locked', 'unlocked');
+            }
+            if (puntos >= 0) {
+                document.getElementById('giga-pro').classList.replace('locked', 'unlocked');
             }
         }
 
