@@ -18,11 +18,11 @@
 <body class="min-h-screen flex flex-col">
 
     <header class="bg-white border-b border-green-100 p-4 flex justify-between items-center shadow-sm">
-        <button onclick="window.location.href='../index.html'" class="text-sm font-bold text-green-700 hover:text-green-900">🡠 VOLVER AL LOBBY</button>
+        <button onclick="window.location.href='../index.html'" class="text-sm font-bold text-green-700 hover:text-green-900">🡠 VOLVER</button>
         <div class="text-center">
-            <h1 class="text-lg font-black text-green-700 uppercase tracking-widest">Desafíos Académicos</h1>
+            <h1 class="text-lg font-black text-green-700 uppercase tracking-widest">Ponte a prueba</h1>
         </div>
-        <div class="text-[10px] font-bold text-gray-400 uppercase">Sci-fun SV</div>
+        <div class="text-[10px] font-bold text-gray-400 uppercase">Sci-fun</div>
     </header>
 
     <main class="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full relative">
@@ -38,7 +38,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-lg text-green-700 mb-2">Unidad 1: Hibridación del Carbono</h3>
+                    <h3 class="font-bold text-lg text-green-700 mb-2">Hibridación del Carbono</h3>
                     <p class="text-sm text-gray-500 mb-4">Preguntas sobre orbitales s, p y la formación de sp, sp2 y sp3.</p>
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
@@ -47,11 +47,19 @@
                 </div>
 
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-lg text-green-700 mb-2">Unidad 2: Hidrocarburos 3D</h3>
+                    <h3 class="font-bold text-lg text-green-700 mb-2">Hidrocarburos 3D</h3>
                     <p class="text-sm text-gray-500 mb-4">Identifica alcanos, alquenos y alquinos por su estructura.</p>
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">5 Preguntas</span>
+                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
                         <button onclick="iniciarExamen('hidrocarburos')" class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition">Comenzar</button>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-lg text-green-700 mb-2">Alquenos</h3>
+                    <p class="text-sm text-gray-500 mb-4">Preguntas sobre los compuestos con enlaces dobles.</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
+                        <button onclick="iniciarExamen('Alquenos')" class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition">Comenzar</button>
                     </div>
                 </div>
             </div>
@@ -74,7 +82,7 @@
             <div class="text-6xl mb-4">🏆</div>
             <h2 class="text-2xl font-black text-green-700 uppercase mb-2">¡Misión Completada!</h2>
             <p class="text-gray-600 mb-6">Has terminado el desafío. Aquí está tu puntaje:</p>
-            <div class="text-5xl font-black text-gray-800 mb-2"><span id="puntaje-final">0</span>/5</div>
+            <div class="text-5xl font-black text-gray-800 mb-2"><span id="puntaje-final">0</span>/6</div>
             <p class="text-sm text-gray-400 font-bold uppercase mb-8">Respuestas correctas</p>
             
             <button onclick="guardarYVolver()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-green-600 transition shadow-md">
@@ -95,13 +103,21 @@
                 { q: "¿Qué orbital tiene un nodo en el centro donde la probabilidad de hallar el electrón es cero?", o: ["Orbital s", "Orbital p", "Orbital f", "Orbital molecular"], a: 1 },
                 { q:"¿Cuál de las siguientes moléculas tiene hibridación sp³?", o: ["Etileno (C2H4)", "Acetileno (C2H2)", "Metano (CH4)", "Dióxido de carbono (CO2)"], a: 2 }
             ],
-            'hidrocarburos': [
-                { q: "¿Cuál es el sufijo utilizado para nombrar a los alcanos?", o: ["-eno", "-ino", "-ol", "-ano"], a: 3 },
-                { q: "Un hidrocarburo con un enlace doble carbono-carbono es un:", o: ["Alcano", "Alqueno", "Alquino", "Aromático"], a: 1 },
-                { q: "¿Cuántos átomos de carbono tiene el propano?", o: ["1", "2", "3", "4"], a: 2 },
-                { q: "El etino también es conocido comúnmente como:", o: ["Gas natural", "Acetileno", "Etileno", "Metano"], a: 1 },
-                { q: "¿Qué tipo de geometría tiene la molécula de eteno?", o: ["Tetraédrica", "Lineal", "Plana trigonal", "Piramidal"], a: 2 },
-                { q: "¿Cuál de las siguientes estructuras corresponde a un alquino?", o: ["CH3-CH3", "CH2=CH2", "CH≡CH", "C6H6"], a: 2 }
+            'hibridacion': [
+                { q: "¿Qué forma tiene el orbital atómico 's'?", o: ["Mancuerna", "Esférica", "Cuadrada", "Lineal"], a: 1 },
+                { q: "La hibridación sp³ (como en el metano) forma una geometría:", o: ["Lineal", "Trigonal plana", "Tetraédrica", "Octaédrica"], a: 2 },
+                { q: "¿Cuántos orbitales 'p' se mezclan en la hibridación sp²?", o: ["Uno", "Dos", "Tres", "Ninguno"], a: 1 },
+                { q: "El acetileno tiene un enlace triple. ¿Qué hibridación tienen sus carbonos?", o: ["sp", "sp²", "sp³", "s²p"], a: 0 },
+                { q: "¿Qué orbital tiene un nodo en el centro donde la probabilidad de hallar el electrón es cero?", o: ["Orbital s", "Orbital p", "Orbital f", "Orbital molecular"], a: 1 },
+                { q:"¿Cuál de las siguientes moléculas tiene hibridación sp³?", o: ["Etileno (C2H4)", "Acetileno (C2H2)", "Metano (CH4)", "Dióxido de carbono (CO2)"], a: 2 }
+            ],
+            'Alquenos': [
+                { q: "¿Cuál es el sufijo utilizado para nombrar a los alquenos?", o: ["-eno", "-ino", "-ol", "-ano"], a: 0},
+                { q: "Un hidrocarburo con un enlace triple carbono-carbono es un:", o: ["Alcano", "Alqueno", "Alquino", "Aromático"], a: 2 },
+                { q: "¿Qué tipo de isomería presentan los alquenos debido a la restricción de rotación en el doble enlace?", o: ["Isomería estructural", "Isomería geométrica (cis-trans)", "Isomería óptica", "Isomería conformacional"], a: 1 },
+                { q: "¿Cuántos átomos de carbono tiene el nonano?", o: ["1", "9", "3", "4"], a: 1 },
+                { q: "¿Cuál de las siguientes fórmulas representa un alqueno?", o: ["C2H6", "C2H4", "C2H2", "C6H6"], a: 1 },
+                { q: "¿Qué tipo de reacción es común en los alquenos debido a su doble enlace?", o: ["Reacción de sustitución", "Reacción de adición", "Reacción de eliminación", "Reacción de oxidación"], a: 1 }    
             ]
         };
 
