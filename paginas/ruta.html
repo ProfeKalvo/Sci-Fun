@@ -1,138 +1,80 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sci-fun - Ruta de Aprendizaje</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #F0F9F4; font-family: 'Outfit', sans-serif; color: #2D4A3E; }
-        .path-line { 
-            position: absolute; left: 40px; top: 0; bottom: 0; 
-            width: 4px; background: #E2E8F0; z-index: 0; 
-        }
-        .step-node { z-index: 10; transition: all 0.3s ease; }
-        .locked { filter: grayscale(1); opacity: 0.6; pointer-events: none; }
-        .unlocked { filter: grayscale(0); opacity: 1; }
-        .current-mission { border: 4px solid #FACC15; animation: pulse-border 2s infinite; }
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(250, 204, 21, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sci-fun - Ruta de Aprendizaje</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../scifun/scifun.css">
+<script src="../scifun/scifun.js"></script>
+<style>
+.sf-main{max-width:660px;padding-bottom:120px}
+.path{position:relative;display:flex;flex-direction:column;gap:34px;margin:0;padding:0;list-style:none}
+.path::before{content:"";position:absolute;left:34px;top:36px;bottom:36px;width:4px;border-radius:4px;background:repeating-linear-gradient(var(--line) 0 10px,transparent 10px 18px)}
+.step{--c1:#10b981;--c2:#0d9488;position:relative;display:flex;align-items:center;gap:20px}
+.node{position:relative;flex:none;width:72px;height:72px;display:grid;place-items:center;border:4px solid var(--bg1);border-radius:50%;font-size:32px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 24px -8px color-mix(in srgb,var(--c1) 70%,transparent)}
+.mk{position:absolute;right:-8px;bottom:-4px;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;font-size:15px;font-weight:900;color:#15803d;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.body{flex:1;padding:16px 20px}
+.body h3{margin:0 0 2px;font-size:19px;font-weight:700}
+.body p{margin:0;font-size:15px;color:var(--mute)}
+.stat{display:block;margin-top:8px;font-size:14px;font-weight:700}
+.body .bar{height:7px}
+.body small{display:block;margin-top:4px;font-weight:600;color:var(--mute)}
+.st-done .stat{color:#15803d}
+.st-cur .stat{color:#a16207}
+.st-cur .node{animation:ring 2s infinite}
+.st-lock .node,.st-lock .body{filter:grayscale(1);opacity:.6}
+[data-theme=dark] .st-done .stat{color:#6ee7b7}
+[data-theme=dark] .st-cur .stat{color:#fde047}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(250,204,21,.7)}70%{box-shadow:0 0 0 16px rgba(250,204,21,0)}100%{box-shadow:0 0 0 0 rgba(250,204,21,0)}}
+.coach{position:fixed;right:20px;bottom:20px;z-index:30;display:flex;align-items:center;gap:6px;max-width:min(340px,90vw);padding:8px 10px 8px 20px;border:2px solid #34d399;border-radius:99px;background:var(--bg1);box-shadow:0 14px 34px -10px rgba(0,0,0,.35)}
+.coach span{font-size:15px;font-weight:600;line-height:1.35}
+.coach img{width:56px;height:56px;flex:none;object-fit:contain}
+</style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body data-title="Mi camino científico">
 
-    <header class="bg-white border-b border-green-100 p-4 flex justify-between items-center shadow-sm">
-        <button onclick="window.location.href='../index.html'" class="text-xs font-bold text-green-700 hover:underline">🡠 VOLVER</button>
-        <h1 class="text-lg font-black text-green-700 uppercase">Mi Camino Científico</h1>
-        <div class="text-[10px] font-bold text-gray-300">SCI-FUN MAP V1.0</div>
-    </header>
+<main class="sf-main"><ol class="path" id="path"></ol></main>
 
-    <main class="flex-grow p-6 max-w-2xl mx-auto w-full relative">
-        
-        <div class="path-line"></div>
+<div class="coach" role="status">
+  <span id="capi-msg">¡Sigue avanzando!</span>
+  <img src="AVATAR/CAPIBARA.png" alt="Capi" onerror="SF.fb(this)">
+</div>
 
-        <div class="space-y-12">
+<script>
+const PASOS = [
+  { e: '🏠', t: 'Bienvenida al laboratorio', d: 'Completa el tutorial interactivo con Capi.', c: ['#0284c7', '#4f46e5'], ok: s => s.tutorial, cur: 'Misión actual', done: '¡Completado!' },
+  { e: '🧬', t: 'Iniciado en Química', d: 'Consigue tus primeros 50 puntos en desafíos.', c: ['#059669', '#0d9488'], ok: s => s.xp >= 50, goal: 50, cur: 'Siguiente objetivo', done: '¡Completado!' },
+  { e: '⚛️', t: 'Investigador de Enlaces', d: 'Alcanza los 150 puntos de experiencia.', c: ['#7c3aed', '#c026d3'], ok: s => s.xp >= 150, goal: 150, cur: 'En progreso', done: '¡Completado!' },
+  { e: '🚀', t: 'MVP de la ciencia', d: 'Completa todos los retos con 250 puntos.', c: ['#d97706', '#c2410c'], ok: s => s.xp >= 250, goal: 250, cur: 'Desafío final', done: '¡Maestría alcanzada!' }
+];
 
-            <div id="step-1" class="flex items-start gap-6 step-node">
-                <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center text-3xl shadow-lg border-4 border-white">🏠</div>
-                <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100 flex-grow">
-                    <h3 class="font-bold text-gray-700">Bienvenida al Laboratorio</h3>
-                    <p class="text-xs text-gray-400">Completa el tutorial interactivo con Capi.</p>
-                    <span id="status-1" class="text-[9px] font-black text-blue-500 uppercase mt-2 block">Cargando...</span>
-                </div>
-            </div>
+function actualizarMapa() {
+  const s = SF.info();
+  let prev = true, actual = null;
+  document.getElementById('path').innerHTML = PASOS.map((p, i) => {
+    const ok = p.ok(s), estado = ok ? 'done' : prev ? 'cur' : 'lock';
+    if (estado === 'cur' && !actual) actual = p;
+    prev = ok;
+    const label = estado === 'done' ? p.done : estado === 'cur' ? p.cur : 'Bloqueado';
+    const mark = estado === 'done' ? '✓' : estado === 'lock' ? '🔒' : '';
+    const prog = estado === 'cur' && p.goal
+      ? `<div class="bar"><i style="width:${Math.min(100, s.xp / p.goal * 100)}%"></i></div><small>${s.xp} / ${p.goal} pts</small>` : '';
+    return `<li class="step st-${estado} enter" style="--i:${i};--c1:${p.c[0]};--c2:${p.c[1]}">
+      <div class="node" aria-hidden="true">${p.e}${mark ? `<span class="mk">${mark}</span>` : ''}</div>
+      <div class="panel body"><h3>${p.t}</h3><p>${p.d}</p><span class="stat">${label}</span>${prog}</div>
+    </li>`;
+  }).join('');
 
-            <div id="step-2" class="flex items-start gap-6 step-node locked">
-                <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center text-3xl shadow-lg border-4 border-white">🧬</div>
-                <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100 flex-grow">
-                    <h3 class="font-bold text-gray-700">Iniciado en Química</h3>
-                    <p class="text-xs text-gray-400">Consigue tus primeros 50 puntos en desafíos.</p>
-                    <span id="status-2" class="text-[9px] font-black text-gray-400 uppercase mt-2 block">Bloqueado</span>
-                </div>
-            </div>
+  document.getElementById('capi-msg').innerText = !actual
+    ? '¡Maestría alcanzada! Eres leyenda.'
+    : actual.goal ? 'Te faltan ' + (actual.goal - s.xp) + ' pts para el siguiente paso.' : 'Haz el tutorial con Capi desde el inicio.';
 
-            <div id="step-3" class="flex items-start gap-6 step-node locked">
-                <div class="w-20 h-20 bg-purple-500 rounded-full flex items-center justify-center text-3xl shadow-lg border-4 border-white">⚛️</div>
-                <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100 flex-grow">
-                    <h3 class="font-bold text-gray-700">Investigador de Enlaces</h3>
-                    <p class="text-xs text-gray-400">Alcanza los 150 puntos de experiencia.</p>
-                    <span id="status-3" class="text-[9px] font-black text-gray-400 uppercase mt-2 block">Bloqueado</span>
-                </div>
-            </div>
-
-            <div id="step-4" class="flex items-start gap-6 step-node locked">
-                <div class="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center text-3xl shadow-lg border-4 border-white">🚀</div>
-                <div class="bg-white p-5 rounded-2xl shadow-md border border-gray-100 flex-grow">
-                    <h3 class="font-bold text-gray-700">MVP de la ciencia</h3>
-                    <p class="text-xs text-gray-400">Completa todos los retos con 250 puntos.</p>
-                    <span id="status-4" class="text-[9px] font-bold text-gray-400 uppercase mt-2 block">Bloqueado</span>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="fixed bottom-6 right-6 flex items-center gap-3 bg-white p-3 rounded-full shadow-2xl border-2 border-green-400">
-            <p class="text-[10px] font-bold text-gray-600 px-2">¡Sigue avanzando!</p>
-            <img src="AVATAR/CAPIBARA.png" class="w-12 h-12 object-contain" alt="Capi">
-        </div>
-
-    </main>
-
-    <script>
-        function actualizarMapa() {
-            const puntos = parseInt(localStorage.getItem('sci_fun_score') || '0');
-            const tutorialDone = localStorage.getItem('tutorialDone') === 'true';
-
-            // Lógica para Paso 1 (Tutorial)
-            if (tutorialDone) {
-                desbloquearPaso('step-1', 'status-1', '¡Completado!', 'bg-blue-500');
-            } else {
-                marcarComoActual('step-1', 'status-1', 'Misión Actual');
-            }
-
-            // Lógica para Paso 2 (50 puntos)
-            if (puntos >= 50) {
-                desbloquearPaso('step-2', 'status-2', '¡Completado!', 'bg-green-500');
-            } else if (tutorialDone) {
-                marcarComoActual('step-2', 'status-2', 'Siguiente Objetivo');
-            }
-
-            // Lógica para Paso 3 (150 puntos)
-            if (puntos >= 150) {
-                desbloquearPaso('step-3', 'status-3', '¡Completado!', 'bg-purple-500');
-            } else if (puntos >= 50) {
-                marcarComoActual('step-3', 'status-3', 'En Progreso');
-            }
-
-            // Lógica para Paso 4 (250 puntos)
-            if (puntos >= 250) {
-                desbloquearPaso('step-4', 'status-4', '¡Maestría Alcanzada!', 'bg-orange-500');
-            } else if (puntos >= 150) {
-                marcarComoActual('step-4', 'status-4', 'Desafío Final');
-            }
-        }
-
-        function desbloquearPaso(id, statusId, texto, colorClass) {
-            const el = document.getElementById(id);
-            el.classList.remove('locked');
-            el.classList.add('unlocked');
-            document.getElementById(statusId).innerText = texto;
-            document.getElementById(statusId).className = `text-[9px] font-black text-green-600 uppercase mt-2 block`;
-        }
-
-        function marcarComoActual(id, statusId, texto) {
-            const el = document.getElementById(id);
-            el.classList.remove('locked');
-            el.querySelector('.rounded-full').classList.add('current-mission');
-            document.getElementById(statusId).innerText = texto;
-            document.getElementById(statusId).className = `text-[9px] font-black text-yellow-600 uppercase mt-2 block`;
-        }
-
-        window.onload = actualizarMapa;
-    </script>
+  const cur = document.querySelector('.st-cur');
+  if (cur && !matchMedia('(prefers-reduced-motion: reduce)').matches) setTimeout(() => cur.scrollIntoView({ behavior: 'smooth', block: 'center' }), 900);
+}
+actualizarMapa();
+</script>
 </body>
 </html>
+
