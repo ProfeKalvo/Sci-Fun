@@ -1,207 +1,182 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sci-fun - Desafíos Académicos</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { background-color: #F0F9F4; font-family: 'Outfit', sans-serif; color: #2D4A3E; }
-        .opcion-btn { transition: all 0.2s; border: 2px solid #e2e8f0; }
-        .opcion-btn:hover { border-color: #56ab91; background-color: #f0fdf4; }
-        .correcta { background-color: #22c55e !important; color: white !important; border-color: #16a34a !important; }
-        .incorrecta { background-color: #ef4444 !important; color: white !important; border-color: #dc2626 !important; }
-        .oculto { display: none !important; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sci-fun - Desafíos Académicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../scifun/scifun.css">
+<script src="../scifun/scifun.js"></script>
+<style>
+.intro{display:flex;align-items:center;gap:18px;margin-bottom:26px}
+.intro .ico{margin:0;flex:none}
+.intro h2{margin:0 0 4px;font-size:26px}
+.intro p{margin:0;color:var(--mute)}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.chip{padding:4px 12px;border-radius:99px;font-size:13px;font-weight:600;background:color-mix(in srgb,var(--c1) 18%,transparent);border:1px solid color-mix(in srgb,var(--c1) 45%,transparent)}
+#vista-examen{max-width:680px;margin:0 auto}
+.say{display:flex;gap:14px;align-items:flex-start;margin:18px 0 22px}
+.av{flex:none;width:84px;height:84px;display:grid;place-items:center}
+.av img{width:100%;height:100%;object-fit:contain}
+.say .panel{flex:1;padding:16px 20px;border-top-left-radius:6px}
+#pregunta-texto{margin:0;font-size:20px;font-weight:700;line-height:1.4}
+.say small{display:block;margin-top:10px;text-align:right;font-weight:600;color:var(--mute)}
+.opts{display:flex;flex-direction:column;gap:12px}
+.op{width:100%;padding:16px 18px;border:2px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:600;text-align:left;cursor:pointer;transition:transform .2s,border-color .2s}
+.op:hover{border-color:#10b981;transform:translateX(4px)}
+.op.ok{background:#16a34a;border-color:#15803d;color:#fff}
+.op.bad{background:#dc2626;border-color:#b91c1c;color:#fff}
+.res{max-width:440px;margin:30px auto 0;padding:34px 28px;text-align:center;border:3px solid #34d399}
+.res .big{font-size:64px;line-height:1}
+.res h2{margin:10px 0 6px;font-size:28px;font-weight:900}
+.res p{margin:0 0 16px;color:var(--mute)}
+.res .score{font-size:54px;font-weight:900;line-height:1}
+.res .pts{margin:6px 0 24px;font-weight:700;color:#15803d}
+[data-theme=dark] .res .pts{color:#6ee7b7}
+</style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body data-title="Desafíos académicos">
 
-    <header class="bg-white border-b border-green-100 p-4 flex justify-between items-center shadow-sm">
-        <button onclick="window.location.href='../index.html'" class="text-sm font-bold text-green-700 hover:text-green-900">🡠 VOLVER</button>
-        <div class="text-center">
-            <h1 class="text-lg font-black text-green-700 uppercase tracking-widest">Ponte a prueba</h1>
-        </div>
-        <div class="text-[10px] font-bold text-gray-400 uppercase">Sci-fun</div>
-    </header>
+<main class="sf-main">
+  <section id="vista-lista">
+    <div class="panel intro">
+      <div class="ico" style="--c1:#d97706;--c2:#c2410c" aria-hidden="true">📝</div>
+      <div>
+        <h2>Elige tu misión, Investigador</h2>
+        <p>Demuestra lo que has aprendido en el laboratorio virtual.</p>
+      </div>
+    </div>
+    <div class="grid" id="lista"></div>
+  </section>
 
-    <main class="flex-grow p-4 md:p-8 max-w-4xl mx-auto w-full relative">
+  <section id="vista-examen" hidden>
+    <div class="bar" role="progressbar" aria-label="Avance del desafío" id="prog-bar"><i id="prog"></i></div>
+    <div class="say">
+      <div class="av"><img src="assets/tu-avatar.png" alt="Capi" onerror="SF.fb(this)"></div>
+      <div class="panel">
+        <p id="pregunta-texto" aria-live="polite">Cargando pregunta...</p>
+        <small>Pregunta <span id="num-pregunta">1</span> de <span id="total">6</span></small>
+      </div>
+    </div>
+    <div class="opts" id="contenedor-opciones"></div>
+  </section>
 
-        <div id="vista-lista" class="space-y-6">
-            <div class="flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm">
-                <div class="w-16 h-16 bg-yellow-100 rounded-xl flex items-center justify-center text-3xl">📝</div>
-                <div>
-                    <h2 class="text-xl font-bold text-gray-700">Elige tu misión, Investigador</h2>
-                    <p class="text-sm text-gray-500">Demuestra lo que has aprendido en el laboratorio virtual.</p>
-                </div>
-            </div>
+  <section id="vista-resultados" class="panel res" hidden>
+    <div class="big" aria-hidden="true">🏆</div>
+    <h2>¡Misión completada!</h2>
+    <p id="msg-final">Has terminado el desafío. Aquí está tu puntaje:</p>
+    <div class="score"><span id="puntaje-final">0</span>/<span id="total-final">6</span></div>
+    <p class="pts">Respuestas correctas · <span id="pts-ganados">+0</span> pts</p>
+    <button class="btn" onclick="guardarYVolver()">Guardar logro y volver</button>
+  </section>
+</main>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-lg text-green-700 mb-2">Hibridación del Carbono</h3>
-                    <p class="text-sm text-gray-500 mb-4">Preguntas sobre orbitales s, p y la formación de sp, sp2 y sp3.</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
-                        <button onclick="iniciarExamen('hibridacion')" class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition">Comenzar</button>
-                    </div>
-                </div>
+<script>
+// --- BASE DE DATOS DE PREGUNTAS ---
+const bancoPreguntas = {
+  'hibridacion': [
+    { q: "¿Qué forma tiene el orbital atómico 's'?", o: ["Mancuerna", "Esférica", "Cuadrada", "Lineal"], a: 1 },
+    { q: "La hibridación sp³ (como en el metano) forma una geometría:", o: ["Lineal", "Trigonal plana", "Tetraédrica", "Octaédrica"], a: 2 },
+    { q: "¿Cuántos orbitales 'p' se mezclan en la hibridación sp²?", o: ["Uno", "Dos", "Tres", "Ninguno"], a: 1 },
+    { q: "El acetileno tiene un enlace triple. ¿Qué hibridación tienen sus carbonos?", o: ["sp", "sp²", "sp³", "s²p"], a: 0 },
+    { q: "¿Qué orbital tiene un nodo en el centro donde la probabilidad de hallar el electrón es cero?", o: ["Orbital s", "Orbital p", "Orbital f", "Orbital molecular"], a: 1 },
+    { q: "¿Cuál de las siguientes moléculas tiene hibridación sp³?", o: ["Etileno (C2H4)", "Acetileno (C2H2)", "Metano (CH4)", "Dióxido de carbono (CO2)"], a: 2 }
+  ],
+  'Alquenos': [
+    { q: "¿Cuál es el sufijo utilizado para nombrar a los alquenos?", o: ["-eno", "-ino", "-ol", "-ano"], a: 0 },
+    { q: "Un hidrocarburo con un enlace triple carbono-carbono es un:", o: ["Alcano", "Alqueno", "Alquino", "Aromático"], a: 2 },
+    { q: "¿Qué tipo de isomería presentan los alquenos debido a la restricción de rotación en el doble enlace?", o: ["Isomería estructural", "Isomería geométrica (cis-trans)", "Isomería óptica", "Isomería conformacional"], a: 1 },
+    { q: "¿Cuántos átomos de carbono tiene el nonano?", o: ["1", "9", "3", "4"], a: 1 },
+    { q: "¿Cuál de las siguientes fórmulas representa un alqueno?", o: ["C2H6", "C2H4", "C2H2", "C6H6"], a: 1 },
+    { q: "¿Qué tipo de reacción es común en los alquenos debido a su doble enlace?", o: ["Reacción de sustitución", "Reacción de adición", "Reacción de eliminación", "Reacción de oxidación"], a: 1 }
+  ]
+  // Cuando tengas las preguntas de 'hidrocarburos', agrégalas aquí y el desafío se activa solo.
+};
 
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-lg text-green-700 mb-2">Hidrocarburos 3D</h3>
-                    <p class="text-sm text-gray-500 mb-4">Identifica alcanos, alquenos y alquinos por su estructura.</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
-                        <button onclick="iniciarExamen('hidrocarburos')" class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition">Comenzar</button>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-lg text-green-700 mb-2">Alquenos</h3>
-                    <p class="text-sm text-gray-500 mb-4">Preguntas sobre los compuestos con enlaces dobles.</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded">6 Preguntas</span>
-                        <button onclick="iniciarExamen('Alquenos')" class="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold hover:bg-green-600 transition">Comenzar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+// Tarjetas de la lista (id = clave en bancoPreguntas)
+const EXAMENES = [
+  { id: 'hibridacion', t: 'Hibridación del Carbono', d: 'Preguntas sobre orbitales s, p y la formación de sp, sp2 y sp3.', e: '⚛️', c: ['#059669', '#0d9488'] },
+  { id: 'hidrocarburos', t: 'Hidrocarburos 3D', d: 'Identifica alcanos, alquenos y alquinos por su estructura.', e: '🧪', c: ['#0284c7', '#4f46e5'] },
+  { id: 'Alquenos', t: 'Alquenos', d: 'Preguntas sobre los compuestos con enlaces dobles.', e: '🔗', c: ['#d97706', '#c2410c'] }
+];
 
-        <div id="vista-examen" class="oculto max-w-2xl mx-auto">
-            <div class="flex items-start gap-4 mb-6">
-                <img src="assets/tu-avatar.png" alt="Capi" class="w-20 h-20 object-contain drop-shadow-md">
-                <div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-green-100 relative w-full">
-                    <p id="pregunta-texto" class="font-bold text-gray-700 text-lg">Cargando pregunta...</p>
-                    <p class="text-xs text-gray-400 font-bold mt-2 text-right">Pregunta <span id="num-pregunta">1</span> de 6</p>
-                </div>
-            </div>
+const $ = s => document.querySelector(s);
+$('#lista').innerHTML = EXAMENES.map((x, i) => {
+  const n = (bancoPreguntas[x.id] || []).length;
+  return `<article class="card" style="--i:${i};--c1:${x.c[0]};--c2:${x.c[1]}">
+    <div class="ico" aria-hidden="true">${x.e}</div>
+    <h3>${x.t}</h3><p>${x.d}</p>
+    <div class="meta"><span class="chip">${n ? n + ' preguntas' : 'Próximamente'}</span>
+    <button class="btn" ${n ? '' : 'disabled'} onclick="iniciarExamen('${x.id}')">Comenzar</button></div>
+  </article>`;
+}).join('');
 
-            <div id="contenedor-opciones" class="flex flex-col gap-3">
-                </div>
-        </div>
+// --- VARIABLES GLOBALES ---
+let examenActual = [], indicePregunta = 0, puntaje = 0, bloqueado = false;
 
-        <div id="vista-resultados" class="oculto bg-white p-8 rounded-3xl shadow-lg text-center max-w-md mx-auto mt-10 border-4 border-green-400">
-            <div class="text-6xl mb-4">🏆</div>
-            <h2 class="text-2xl font-black text-green-700 uppercase mb-2">¡Misión Completada!</h2>
-            <p class="text-gray-600 mb-6">Has terminado el desafío. Aquí está tu puntaje:</p>
-            <div class="text-5xl font-black text-gray-800 mb-2"><span id="puntaje-final">0</span>/6</div>
-            <p class="text-sm text-gray-400 font-bold uppercase mb-8">Respuestas correctas</p>
-            
-            <button onclick="guardarYVolver()" class="w-full bg-green-500 text-white py-3 rounded-xl font-bold text-lg hover:bg-green-600 transition shadow-md">
-                Guardar Logro y Volver
-            </button>
-        </div>
+function iniciarExamen(tipo) {
+  examenActual = bancoPreguntas[tipo];
+  if (!examenActual) return;
+  indicePregunta = 0; puntaje = 0;
+  $('#total').innerText = examenActual.length;
+  $('#vista-lista').hidden = true;
+  $('#vista-examen').hidden = false;
+  SF.beep(660);
+  mostrarPregunta();
+}
 
-    </main>
+function mostrarPregunta() {
+  bloqueado = false;
+  const data = examenActual[indicePregunta];
+  $('#num-pregunta').innerText = indicePregunta + 1;
+  $('#prog').style.width = (indicePregunta / examenActual.length * 100) + '%';
+  $('#pregunta-texto').innerText = data.q;
+  const cont = $('#contenedor-opciones');
+  cont.innerHTML = '';
+  data.o.forEach((opcion, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'op';
+    btn.innerText = opcion;
+    btn.onclick = () => verificarRespuesta(index, btn);
+    cont.appendChild(btn);
+  });
+}
 
-    <script>
-        // --- BASE DE DATOS DE PREGUNTAS ---
-        const bancoPreguntas = {
-            'hibridacion': [
-                { q: "¿Qué forma tiene el orbital atómico 's'?", o: ["Mancuerna", "Esférica", "Cuadrada", "Lineal"], a: 1 },
-                { q: "La hibridación sp³ (como en el metano) forma una geometría:", o: ["Lineal", "Trigonal plana", "Tetraédrica", "Octaédrica"], a: 2 },
-                { q: "¿Cuántos orbitales 'p' se mezclan en la hibridación sp²?", o: ["Uno", "Dos", "Tres", "Ninguno"], a: 1 },
-                { q: "El acetileno tiene un enlace triple. ¿Qué hibridación tienen sus carbonos?", o: ["sp", "sp²", "sp³", "s²p"], a: 0 },
-                { q: "¿Qué orbital tiene un nodo en el centro donde la probabilidad de hallar el electrón es cero?", o: ["Orbital s", "Orbital p", "Orbital f", "Orbital molecular"], a: 1 },
-                { q:"¿Cuál de las siguientes moléculas tiene hibridación sp³?", o: ["Etileno (C2H4)", "Acetileno (C2H2)", "Metano (CH4)", "Dióxido de carbono (CO2)"], a: 2 }
-            ],
-            'hibridacion': [
-                { q: "¿Qué forma tiene el orbital atómico 's'?", o: ["Mancuerna", "Esférica", "Cuadrada", "Lineal"], a: 1 },
-                { q: "La hibridación sp³ (como en el metano) forma una geometría:", o: ["Lineal", "Trigonal plana", "Tetraédrica", "Octaédrica"], a: 2 },
-                { q: "¿Cuántos orbitales 'p' se mezclan en la hibridación sp²?", o: ["Uno", "Dos", "Tres", "Ninguno"], a: 1 },
-                { q: "El acetileno tiene un enlace triple. ¿Qué hibridación tienen sus carbonos?", o: ["sp", "sp²", "sp³", "s²p"], a: 0 },
-                { q: "¿Qué orbital tiene un nodo en el centro donde la probabilidad de hallar el electrón es cero?", o: ["Orbital s", "Orbital p", "Orbital f", "Orbital molecular"], a: 1 },
-                { q:"¿Cuál de las siguientes moléculas tiene hibridación sp³?", o: ["Etileno (C2H4)", "Acetileno (C2H2)", "Metano (CH4)", "Dióxido de carbono (CO2)"], a: 2 }
-            ],
-            'Alquenos': [
-                { q: "¿Cuál es el sufijo utilizado para nombrar a los alquenos?", o: ["-eno", "-ino", "-ol", "-ano"], a: 0},
-                { q: "Un hidrocarburo con un enlace triple carbono-carbono es un:", o: ["Alcano", "Alqueno", "Alquino", "Aromático"], a: 2 },
-                { q: "¿Qué tipo de isomería presentan los alquenos debido a la restricción de rotación en el doble enlace?", o: ["Isomería estructural", "Isomería geométrica (cis-trans)", "Isomería óptica", "Isomería conformacional"], a: 1 },
-                { q: "¿Cuántos átomos de carbono tiene el nonano?", o: ["1", "9", "3", "4"], a: 1 },
-                { q: "¿Cuál de las siguientes fórmulas representa un alqueno?", o: ["C2H6", "C2H4", "C2H2", "C6H6"], a: 1 },
-                { q: "¿Qué tipo de reacción es común en los alquenos debido a su doble enlace?", o: ["Reacción de sustitución", "Reacción de adición", "Reacción de eliminación", "Reacción de oxidación"], a: 1 }    
-            ]
-        };
+function verificarRespuesta(sel, btn) {
+  if (bloqueado) return;
+  bloqueado = true;
+  const correcta = examenActual[indicePregunta].a;
+  if (sel === correcta) {
+    btn.classList.add('ok'); puntaje++; SF.beep(784, .15);
+  } else {
+    btn.classList.add('bad');
+    document.querySelectorAll('.op')[correcta].classList.add('ok');
+    SF.beep(196, .25);
+  }
+  setTimeout(() => {
+    indicePregunta++;
+    if (indicePregunta < examenActual.length) mostrarPregunta(); else mostrarResultados();
+  }, 1500);
+}
 
-        // --- VARIABLES GLOBALES ---
-        let examenActual = [];
-        let indicePregunta = 0;
-        let puntaje = 0;
-        let bloqueado = false; // Evita que se hagan múltiples clics
+function mostrarResultados() {
+  const n = examenActual.length, r = puntaje / n;
+  $('#prog').style.width = '100%';
+  $('#vista-examen').hidden = true;
+  $('#vista-resultados').hidden = false;
+  $('#puntaje-final').innerText = puntaje;
+  $('#total-final').innerText = n;
+  $('#pts-ganados').innerText = '+' + (puntaje * 10);
+  $('#msg-final').innerText = r === 1 ? '¡Perfecto! Eres un científico de élite.' : r >= .5 ? '¡Buen trabajo! Sigue practicando para mejorar.' : 'Cada error es un descubrimiento. ¡Inténtalo otra vez!';
+  [523, 659, 784].forEach((f, i) => setTimeout(() => SF.beep(f, .18), i * 140));
+}
 
-        // --- FUNCIONES DEL EXAMEN ---
-        function iniciarExamen(tipo) {
-            examenActual = bancoPreguntas[tipo];
-            indicePregunta = 0;
-            puntaje = 0;
-            
-            // Cambiar de vista
-            document.getElementById('vista-lista').classList.add('oculto');
-            document.getElementById('vista-examen').classList.remove('oculto');
-            
-            mostrarPregunta();
-        }
-
-        function mostrarPregunta() {
-            bloqueado = false;
-            const data = examenActual[indicePregunta];
-            
-            document.getElementById('num-pregunta').innerText = indicePregunta + 1;
-            document.getElementById('pregunta-texto').innerText = data.q;
-            
-            const contenedor = document.getElementById('contenedor-opciones');
-            contenedor.innerHTML = ''; // Limpiar opciones anteriores
-            
-            data.o.forEach((opcion, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'opcion-btn w-full text-left bg-white p-4 rounded-xl text-gray-700 font-semibold shadow-sm';
-                btn.innerText = opcion;
-                btn.onclick = () => verificarRespuesta(index, btn);
-                contenedor.appendChild(btn);
-            });
-        }
-
-        function verificarRespuesta(indiceSeleccionado, botonElement) {
-            if (bloqueado) return;
-            bloqueado = true;
-            
-            const correcta = examenActual[indicePregunta].a;
-            const botones = document.querySelectorAll('.opcion-btn');
-            
-            if (indiceSeleccionado === correcta) {
-                botonElement.classList.add('correcta');
-                puntaje++;
-            } else {
-                botonElement.classList.add('incorrecta');
-                // Resaltar la correcta automáticamente
-                botones[correcta].classList.add('correcta');
-            }
-            
-            // Pasar a la siguiente pregunta después de 1.5 segundos
-            setTimeout(() => {
-                indicePregunta++;
-                if (indicePregunta < examenActual.length) {
-                    mostrarPregunta();
-                } else {
-                    mostrarResultados();
-                }
-            }, 1500);
-        }
-
-        function mostrarResultados() {
-            document.getElementById('vista-examen').classList.add('oculto');
-            document.getElementById('vista-resultados').classList.remove('oculto');
-            document.getElementById('puntaje-final').innerText = puntaje;
-        }
-
-        function guardarYVolver() {
-            // Guardar puntaje acumulativo en LocalStorage
-            let puntosActuales = parseInt(localStorage.getItem('sci_fun_score') || '0');
-            puntosActuales += (puntaje * 10); // 10 puntos por cada respuesta correcta
-            localStorage.setItem('sci_fun_score', puntosActuales);
-            
-            // Regresar al inicio
-            window.location.href = '../index.html';
-        }
-    </script>
-
+function guardarYVolver() {
+  // Guardar puntaje acumulativo en LocalStorage (10 puntos por respuesta correcta)
+  const actuales = parseInt(SF.st.get('sci_fun_score') || '0') + puntaje * 10;
+  SF.st.set('sci_fun_score', actuales);
+  window.location.href = '../index.html';
+}
+</script>
 </body>
 </html>
